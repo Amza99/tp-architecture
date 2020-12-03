@@ -1,3 +1,3 @@
 # Design SYSTEM API
 
-![alt text](http:https://github.com/Amza99/tp-architecture/blob/main/IA-MaghrebUnited/Projet/communicationSYS.png?raw=true)
+![alt text](https://raw.githubusercontent.com/Amza99/tp-architecture/main/IA-MaghrebUnited/Projet/communicationSYS.png)
