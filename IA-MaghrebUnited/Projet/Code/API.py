@@ -13,7 +13,7 @@ http://localhost:5000/billets
 http://localhost:5000/users
 http://localhost:5000/info
 http://127.0.0.1:5000/users?Nom=NOM_TEST&Prenom=Prenom_TEST
-http://127.0.0.1:5000/billets?Nom=Prenom_TEST&Prenom=Prenom_TEST&Id_Vol=1
+http://127.0.0.1:5000/billets?Nom=Bouyahy&Prenom=oumaima&Id_Vol=4
 
 """
     
