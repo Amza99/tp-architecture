@@ -75,7 +75,3 @@ class User :
         new_window = Tk()
         self.window.destroy()
         return new_window
-
-new_window = Tk()
-User(new_window,1)
-new_window.mainloop()
