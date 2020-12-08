@@ -67,7 +67,6 @@ class User :
             print(" Vol annuler ")
         self.List_Deja_Reserver()
     def Clean_Screen(self):
-        print( self.window.children.values() )
         for label in self.window.children.values():
             label.pack_forget()
             label.grid_forget()
