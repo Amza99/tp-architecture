@@ -20,8 +20,8 @@ class DATABASE:
         self.cursor.execute("SELECT COUNT(Id_Users) from Users;")
         return self.cursor.fetchall()[0][0]
     def Reservation(self , Indx_Users , Indx_Vol ):
-        query = " INSERT INTO User_Reservation VALUES("+str(Indx_Users)+","+str(Indx_Vol)+")"
-        self.Run_Query(query)
+        self.Run_Query("INSERT INTO User_Reservation VALUES("+str(Indx_Users)+","+str(Indx_Vol)+")")
+        self.Run_Query("Update Billet Set NB_Billet_Dispo=NB_Billet_Dispo-1 where Id_Billet like "+str(Indx_Vol))
     def Insert_New_User(self,Nom,Prenom):
         New_Index = self.Get_Number_of_Users()+1
         query = "INSERT INTO Users VALUES ("+str(New_Index)+", '"+Nom+"','"+Prenom+"')"
@@ -53,17 +53,48 @@ class DATABASE:
         if len( out ) == 0 :
             return None
         return out[0][0]
+    def Return_INDX_User_Creat_user_if_not_existe(self,Nom,Prenom):        
+        if( self.Get_ID_User(Nom,Prenom) == None ):# si l'utilisateur n'existe pas on le creer 
+            self.Insert_New_User(Nom,Prenom)
+        Indx_User = self.Get_ID_User(Nom,Prenom)# on recupere son ID 
+        return Indx_User
     def Reservation_User_NP_ID_VOL(self,Nom,Prenom,Id_Vol):
         # on test si le billet existe ou n'est pas dispo 
         self.cursor.execute("SELECT * FROM Billet as B where NB_Billet_Dispo != 0 and Id_Billet like "+str(Id_Vol))
         if len(self.cursor.fetchall()) == 0 :
             return -1
-        if( self.Get_ID_User(Nom,Prenom) == None ):# si l'utilisateur n'existe pas on le creer 
-            self.Insert_New_User(Nom,Prenom)
-        Indx_User = self.Get_ID_User(Nom,Prenom)# on recupere son ID 
+        Indx_User = self.Return_INDX_User_Creat_user_if_not_existe(Nom,Prenom)# on recupere son ID 
         self.Reservation(Indx_User,Id_Vol)
         #on decremente le nombre de billet 
         self.Run_Query("Update Billet Set NB_Billet_Dispo=NB_Billet_Dispo-1 where Id_Billet like "+str(Id_Vol))
+    def Get_Reservation_User(self,INDX_User):
+        query = """
+        SELECT Id_Billet , AA.Nom_Airoport as Fromm , A.Nom_Airoport as too , Date(_Date_) FROM Billet as B
+        INNER JOIN Airoport_ID as A on A.Id_Airoport = B.ID_Destination
+        INNER JOIN Airoport_ID as AA on AA.Id_Airoport = B.ID_Provenance
+        INNER JOIN User_Reservation as UR on UR.Id_Vol = B.Id_Billet
+        INNER JOIN Users as U on U.Id_Users = UR.Id_User
+        where Id_User = """+str(INDX_User)
+        self.cursor.execute(query)
+        data = self.cursor.fetchall()
+        if( len(data) == 0 ):
+            return -1
+        return pandas.DataFrame(data,columns =["Id_Billet","From","To","Date"]) 
+    def Delete_Reservation(self,Id_User,Id_Vol):
+        self.Run_Query("DELETE from User_Reservation where Id_User = "+str(Id_User)+" and Id_Vol = "+str(Id_Vol))
+        self.Run_Query("Update Billet Set NB_Billet_Dispo=NB_Billet_Dispo+1 where Id_Billet like "+str(Id_Vol))
+    def Get_Billet_Dispo_for_User(self,ID_User):
+        query = """
+        SELECT Id_Billet , AA.Nom_Airoport as Fromm , A.Nom_Airoport as too , Prix , Date(_Date_)  , NB_Billet_Dispo  FROM Billet as B
+        INNER JOIN Airoport_ID as A on A.Id_Airoport = B.ID_Destination
+        INNER JOIN Airoport_ID as AA on AA.Id_Airoport = B.ID_Provenance
+        where NB_Billet_Dispo != 0 and Id_Billet != ( select Id_Vol from User_Reservation where Id_User = """
+        query += str(ID_User)+")"                             
+        self.cursor.execute(query)
+        data = self.cursor.fetchall()
+        if( len(data) == 0 ):
+            return -1
+        return pandas.DataFrame(data,columns =["Id_Billet","From","To","Price","Date","Billet_Dispo"])  
     def Run_Query(self , query):
         self.cursor.execute( query )
         self.connection.commit()
